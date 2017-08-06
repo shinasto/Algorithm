@@ -1,11 +1,20 @@
 #include <iostream>
+#include <sys/time.h>
 using namespace std;
 
 typedef long long ll;
 const ll DEFAULT = 10;
 const ll MAX_COST = 2000000000LL;
+const int MAX_SIZE = 2002 * 2002;
 
-inline void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
+ll heap_v[MAX_SIZE];
+int heap_l[MAX_SIZE];
+int heap_a[MAX_SIZE];
+int heap_size = 0;
+ll dist[MAX_SIZE];
+
+
+inline void hswap(int pos1, int pos2) {
     ll temp = heap_v[pos1];
     heap_v[pos1] = heap_v[pos2];
     heap_v[pos2] = temp;
@@ -16,12 +25,12 @@ inline void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
     heap_a[heap_l[pos2]] = pos2;
 }
 
-inline void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& size) {
+inline void insert(ll v, int loc) {
     if(heap_a[loc] < 0) {
-        heap_v[size] = v;
-        heap_l[size] = loc;
-        heap_a[loc] = size;
-        size += 1;
+        heap_v[heap_size] = v;
+        heap_l[heap_size] = loc;
+        heap_a[loc] = heap_size;
+        heap_size++;
     } else {
         heap_v[heap_a[loc]] = v;
     }
@@ -29,39 +38,34 @@ inline void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& siz
     int current = heap_a[loc];
     int parent = (int)(current-1)/2;
     while(current > 0 && heap_v[current] < heap_v[parent]) {
-        hswap(heap_v, heap_l, heap_a, current, parent);
+        hswap(current, parent);
         current = parent;
         parent = (int)(current-1)/2;
     }
 }
 
-inline void remove(ll* heap_v, int* heap_l, int* heap_a, int& size) {
-    if(size == 0 ) return;
-    size -= 1;
+inline void remove() {
+    if(heap_size == 0 ) return;
+    heap_size--;
     int current = 0;
     int left = 1;
     int right = 2;
     heap_a[current] = -1;
-    hswap(heap_v, heap_l, heap_a, current, size);
+    hswap(current, heap_size);
+    int select = 0;
     while(true) {
-        int selectNode = 0;
         // leaf node
-        if(left >= size) break;
-        if(right >= size) {
-            selectNode = left;
+        if(left >= heap_size) break;
+        if(right >= heap_size) {
+            select = left;
         } else {
-            if(heap_v[left] < heap_v[right]) {
-                selectNode = left;
-            } else {
-                selectNode = right;
-            }
+            if(heap_v[left] < heap_v[right]) select = left;
+            else select = right;
         }
+        if(heap_v[select] >= heap_v[current]) break;
         
-        if(heap_v[selectNode] >= heap_v[current])
-            break;
-        
-        hswap(heap_v, heap_l, heap_a, current, selectNode);
-        current = selectNode;
+        hswap(current, select);
+        current = select;
         left = current * 2 + 1;
         right = current * 2 + 2;
     }
@@ -106,6 +110,11 @@ int searchID(int arr[], int num, int left, int right) {
 }
 
 int main() {
+    freopen("/Users/shinchulwoo/Documents/Megacity2/Megacity2/input", "r", stdin);
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    
     int ax, ay, bx, by, n;
     cin >> ax >> ay >> bx >> by;
     cin >> n;
@@ -177,68 +186,66 @@ int main() {
         for (int x = x1_id; x < x2_id; ++x) {
             for (int y = y1_id + 1; y < y2_id; ++y) {
                 horizontal[x*h + y] = (sx[x + 1] - sx[x]) * cost[i];
-//                if(horizontal[x*h + y] < 0 ) {
-//                    cout << sx[x + 1] << ", " << sx[x] << ", " << cost[i] << " = " << horizontal[x*h + y] << endl;
-//                }
             }
         }
     }
     
-    ll* heap_v = new ll[b_size];
-    int* heap_l = new int[b_size];
-    int* heap_a = new int[b_size];
-    ll* dist= new ll[b_size];
+    
+    int src = searchID(sx, ax, 0, w-1) * h + searchID(sy, ay, 0, h-1);
+    int dst = searchID(sx, bx, 0, w-1) * h + searchID(sy, by, 0, h-1);
     for(int i=0; i<b_size; i++) {
         heap_a[i] = -1;
         dist[i] = MAX_COST;
     }
-    
-    int src = searchID(sx, ax, 0, w-1) * h + searchID(sy, ay, 0, h-1);
-    int dst = searchID(sx, bx, 0, w-1) * h + searchID(sy, by, 0, h-1);
     heap_v[0] = 0;
     heap_l[0] = src;
     heap_a[src] = 0;
-    int heap_size = 1;
+    heap_size = 1;
     dist[src] = 0;
     
     while(true) {
         int here = heap_l[0];
         ll cost = heap_v[0];
         if(here == dst) break;
-        remove(heap_v, heap_l, heap_a, heap_size);
+        remove();
         
         int h_x = here / h;
         int h_y = here % h;
         if(h_x < w - 1) {
             ll n_cost = horizontal[here] + cost;
             if(dist[here+h] > n_cost) {
-                insert(heap_v, heap_l, heap_a, n_cost, here + h, heap_size);
+                insert(n_cost, here + h);
                 dist[here+h] = n_cost;
             }
         }
         if(h_x > 0) {
             ll n_cost = horizontal[here - h] + cost;
             if(dist[here-h] > n_cost){
-                insert(heap_v, heap_l, heap_a, n_cost, here - h, heap_size);
+                insert(n_cost, here - h);
                 dist[here-h] = n_cost;
             }
         }
         if(h_y < h - 1) {
             ll n_cost = vertical[here] + cost;
             if(dist[here+1] > n_cost) {
-                insert(heap_v, heap_l, heap_a, n_cost, here + 1, heap_size);
+                insert(n_cost, here + 1);
                 dist[here+1] = n_cost;
             }
         }
         if(h_y > 0) {
             ll n_cost = vertical[here - 1] + cost;
             if(dist[here-1] > n_cost) {
-                insert(heap_v, heap_l, heap_a, n_cost, here - 1, heap_size);
+                insert(n_cost, here - 1);
                 dist[here-1] = n_cost;
             }
         }
     }
     cout << dist[dst] << endl;
+    
+    struct timeval tp2;
+    gettimeofday(&tp2, NULL);
+    long int ms2 = tp2.tv_sec * 1000 + tp2.tv_usec / 1000;
+    cout << ms2 - ms << endl;
     
     return 0;
 }
