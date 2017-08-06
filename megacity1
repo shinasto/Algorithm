@@ -1,226 +1,250 @@
 #include <iostream>
 using namespace std;
 
-#define MIN(X,Y) (((X)<(Y))?(X):(Y))
-typedef unsigned int ui;
-const ui DEFAULT = 10;
-const ui MAX_COST = 1000000000;
-const int MAX_SIZE = 50000;
+typedef long long ll;
+const ll DEFAULT = 10;
+const ll MAX_COST = 2000000000LL;
 
-void hswap(ui* heap_v, int* heap_l, int pos1, int pos2) {
-	ui temp = heap_v[pos1];
-	heap_v[pos1] = heap_v[pos2];
-	heap_v[pos2] = temp;
-	int temp2 = heap_l[pos1];
-	heap_l[pos1] = heap_l[pos2];
-	heap_l[pos2] = temp2;
+void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
+    ll temp = heap_v[pos1];
+    heap_v[pos1] = heap_v[pos2];
+    heap_v[pos2] = temp;
+    int temp2 = heap_l[pos1];
+    heap_l[pos1] = heap_l[pos2];
+    heap_l[pos2] = temp2;
+    heap_a[heap_l[pos1]] = pos1;
+    heap_a[heap_l[pos2]] = pos2;
 }
 
-void insert(ui* heap_v, int* heap_l, ui v, int loc, int& size) {
-	int current = size;
-	int parent = (int)(current-1)/2;
-	heap_v[current] = v;
-	heap_l[current] = loc;
-	while(current > 0 && heap_v[current] < heap_v[parent]) {
-		hswap(heap_v, heap_l, current, parent);
-		current = parent;
-		parent = (int)(current-1)/2;
-	}
-	size += 1;
+void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& size) {
+    if(heap_a[loc] < 0) {
+        heap_v[size] = v;
+        heap_l[size] = loc;
+        heap_a[loc] = size;
+        size += 1;
+    } else {
+        //cout << heap_v[heap_a[loc]] <<  " "<< dist[loc] << " "<< v << endl;
+        heap_v[heap_a[loc]] = v;
+    }
+    
+    int current = heap_a[loc];
+    int parent = (int)(current-1)/2;
+    while(current > 0 && heap_v[current] < heap_v[parent]) {
+        hswap(heap_v, heap_l, heap_a, current, parent);
+        current = parent;
+        parent = (int)(current-1)/2;
+    }
 }
-void remove(ui* heap_v, int* heap_l, int& size) {
-	if(size == 0 ) return;
-	size -= 1;
-	int current = 0;
-	int left = 1;
-	int right = 2;
-	heap_v[current] = 0;
-	hswap(heap_v, heap_l, current, size);
-	while(true) {
-		int selectNode = 0;
-		// leaf node
-		if(left >= size) break;
-		if(right >= size) {
-			selectNode = left;
-		} else {
-			selectNode = MIN(heap_v[left], heap_v[right]);
-		}
 
-		if(heap_v[selectNode] >= heap_v[current]) break;
-
-		hswap(heap_v, heap_l, current, selectNode);
-		current = selectNode;
-		left = current * 2 + 1;
-		right = current * 2 + 2;
-	}
+void remove(ll* heap_v, int* heap_l, int* heap_a, int& size) {
+    if(size == 0 ) return;
+    size -= 1;
+    int current = 0;
+    int left = 1;
+    int right = 2;
+    heap_a[current] = -1;
+    hswap(heap_v, heap_l, heap_a, current, size);
+    while(true) {
+        int selectNode = 0;
+        // leaf node
+        if(left >= size) break;
+        if(right >= size) {
+            selectNode = left;
+        } else {
+            if(heap_v[left] < heap_v[right]) {
+                selectNode = left;
+            } else {
+                selectNode = right;
+            }
+        }
+        
+        if(heap_v[selectNode] >= heap_v[current])
+            break;
+        
+        hswap(heap_v, heap_l, heap_a, current, selectNode);
+        current = selectNode;
+        left = current * 2 + 1;
+        right = current * 2 + 2;
+    }
 }
 
 void Sort(int arr[], int left, int right) {
-	int l, r, pivot;
-	int temp;
-	if(left < right) {
-		l = left;
-		r = right;
-		pivot = l;
-		while(l < r) {
-			while(arr[l] <= arr[pivot] && l <= right) l++;
-			while(arr[pivot] < arr[r] && left <= r) r--;
-			if(l < r) {
-				temp = arr[l];
-				arr[l] = arr[r];
-				arr[r] = temp;
-			}
-		}
-		temp = arr[pivot];
-		arr[pivot] = arr[r];
-		arr[r] = temp;
-		Sort(arr, left, r-1);
-		Sort(arr, r+1, right);
-	}
+    int l, r, pivot;
+    int temp;
+    if(left < right) {
+        l = left;
+        r = right;
+        pivot = l;
+        while(l < r) {
+            while(arr[l] <= arr[pivot] && l <= right) l++;
+            while(arr[pivot] < arr[r] && left <= r) r--;
+            if(l < r) {
+                temp = arr[l];
+                arr[l] = arr[r];
+                arr[r] = temp;
+            }
+        }
+        temp = arr[pivot];
+        arr[pivot] = arr[r];
+        arr[r] = temp;
+        Sort(arr, left, r-1);
+        Sort(arr, r+1, right);
+    }
 }
 
-int searchID(pair<int, int> arr[], int num, int left, int right) {
-	while(left <= right) {
-		int mid = (left + right) / 2;
-		if(arr[mid].first == num) {
-			return arr[mid].second;
-		} else if(arr[mid].first < num) {
-			left = mid + 1;
-		} else {
-			right = mid - 1;
-		}
-	}
-	return -1;
+int searchID(int arr[], int num, int left, int right) {
+    while(left <= right) {
+        int mid = (left + right) / 2;
+        if(arr[mid] == num) {
+            return mid;
+        } else if(arr[mid] < num) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return -1;
 }
 
 int main() {
-	int ax, ay, bx, by, n;
-	cin >> ax >> ay >> bx >> by;
-	cin >> n;
-	int lx, ly, hx, hy, c;
-	int x1[1000], y1[1000], x2[1000], y2[1000];
-	int cost[1000];
-	for(int i=0; i<n; i++) {
-		cin >> lx >> ly >> hx >> hy >> c;
-		x1[i] = lx;
-		y1[i] = ly;
-		x2[i] = hx;
-		y2[i] = hy;
-		cost[i] = c;
-	}
-	int xl[2002], yl[2002], x_idx = 0, y_idx = 0;
-	xl[x_idx++] = ax; xl[x_idx++] = bx;
-	yl[y_idx++] = ay; yl[y_idx++] = by;
-	for(int i=0; i<n; i++) {
-		xl[x_idx++] = x1[i]; yl[y_idx++] = y1[i];
-		xl[x_idx++] = x2[i]; yl[y_idx++] = y2[i];
-	}
-	Sort(xl, 0, x_idx-1);
-	Sort(yl, 0, y_idx-1);
-
-	int x_id = 0, y_id = 0;
-	int sx[2002], sy[2002];
-	pair<int, int> x2id[2002];
-	pair<int, int> y2id[2002];
-	sx[0] = xl[0];
-	sy[0] = yl[0];
-	x2id[0] = make_pair(xl[0], x_id++);
-	y2id[0] = make_pair(yl[0], y_id++);
-	for(unsigned int i=1; i<x_idx; i++) {
-		if(xl[i-1] != xl[i]) {
-			sx[i] = xl[i];
-			x2id[i] = make_pair(xl[i], x_id++);
-		}
-		if(yl[i-1] != yl[i]) {
-			sy[i] = yl[i];
-			y2id[i] = make_pair(yl[i], y_id++);
-		}
-	}
-
-	int w = x_id;
-	int h = y_id;
-	int b_size = x_id * y_id;
-	int horizontal[b_size];
-	int vertical[b_size];
-	for(int x=0; x<w; x++) {
-		for(int y=0; y<h-1; y++) {
-			vertical[w*x+y] = (sy[y+1] - sy[y]) * DEFAULT;
-		}
-	}
-	for(int x=0; x<w - 1; x++) {
-		for(int y=0; y<h; y++) {
-			horizontal[w*x+y] = (sx[x+1] - sx[x]) * DEFAULT;
-		}
-	}
-
-	for(int i=0; i<n; i++) {
-		int x1_id = searchID(x2id, x1[i], 0, w-1);
-		int y1_id = searchID(y2id, y1[i], 0, h-1);
-		int x2_id = searchID(x2id, x2[i], 0, w-1);
-		int y2_id = searchID(y2id, y2[i], 0, h-1);
-		for (int x = x1_id + 1; x < x2_id; ++x) {
-			for (int y = y1_id; y < y2_id; ++y) {
-				vertical[x * w + y] = (sy[y + 1] - sy[y]) * cost[i];
-			}
-		}
-		for (int x = x1_id; x < x2_id; ++x) {
-			for (int y = y1_id + 1; y < y2_id; ++y) {
-				horizontal[x * w + y] = (sx[x + 1] - sx[x]) * cost[i];
-			}
-		}
-	}
-
-	ui heap_v[MAX_SIZE];
-	int heap_l[MAX_SIZE];
-	int heap_size = 1;
-	ui dist[MAX_SIZE];
-	for(int i=0; i<MAX_SIZE; i++)
-		dist[i] = MAX_COST;
-	int src = searchID(x2id, ax, 0, w-1) * h + searchID(y2id, ay, 0, h-1);
-	int dst = searchID(x2id, bx, 0, w-1) * h + searchID(y2id, by, 0, h-1);
-	heap_v[0] = 0;
-	heap_l[0] = src;
-	dist[0] = 0;
-
-	while(true) {
-		int here = heap_l[0];
-		ui cost = heap_v[0];
-		if(here == dst) break;
-
-		remove(heap_v, heap_l, heap_size);
-
-		int h_x = here / h;
-		int h_y = here % h;
-		if(h_x < w - 1) {
-			ui n_cost = horizontal[here] + cost;
-			if(dist[here+h] > n_cost) {
-				dist[here+h] = n_cost;
-				insert(heap_v, heap_l, n_cost, here + h, heap_size);
-			}
-		}
-		if(h_x > 0) {
-			ui n_cost = horizontal[here - h] + cost;
-			if(dist[here-h] > n_cost){
-				dist[here-h] = n_cost;
-				insert(heap_v, heap_l, n_cost, here - h, heap_size);
-			}
-		}
-		if(h_y < h - 1) {
-			ui n_cost = vertical[here] + cost;
-			if(dist[here+1] > n_cost) {
-				dist[here+1] = n_cost;
-				insert(heap_v, heap_l, n_cost, here + 1, heap_size);
-			}
-		}
-		if(h_y > 0) {
-			ui n_cost = vertical[here - 1] + cost;
-			if(dist[here-1] > n_cost) {
-				dist[here-1] = n_cost;
-				insert(heap_v, heap_l, n_cost, here - 1, heap_size);
-			}
-		}
-	}
-	cout << dist[dst] << endl;
-
-	return 0;
+    int ax, ay, bx, by, n;
+    cin >> ax >> ay >> bx >> by;
+    cin >> n;
+    int lx, ly, hx, hy, c;
+    int x1[1000], y1[1000], x2[1000], y2[1000];
+    ll cost[1000];
+    for(int i=0; i<n; i++) {
+        cin >> lx >> ly >> hx >> hy >> c;
+        x1[i] = lx;
+        y1[i] = ly;
+        x2[i] = hx;
+        y2[i] = hy;
+        cost[i] = c;
+    }
+    int xl[2002], yl[2002], x_idx = 0, y_idx = 0;
+    xl[x_idx++] = ax; xl[x_idx++] = bx;
+    yl[y_idx++] = ay; yl[y_idx++] = by;
+    for(int i=0; i<n; i++) {
+        xl[x_idx++] = x1[i]; yl[y_idx++] = y1[i];
+        xl[x_idx++] = x2[i]; yl[y_idx++] = y2[i];
+    }
+    Sort(xl, 0, x_idx-1);
+    Sort(yl, 0, y_idx-1);
+    
+    int x_id = 1, y_id = 1;
+    int sx[2002], sy[2002];
+    sx[0] = xl[0];
+    sy[0] = yl[0];
+    for(unsigned int i=1; i<x_idx; i++) {
+        if(xl[i-1] != xl[i]) sx[x_id++] = xl[i];
+        if(yl[i-1] != yl[i]) sy[y_id++] = yl[i];
+    }
+    
+    int w = x_id;
+    int h = y_id;
+    int b_size = x_id * y_id;
+    ll* horizontal = new ll[b_size];
+    ll* vertical = new ll[b_size];
+    for(int x=0; x<w; x++) {
+        for(int y=0; y<h-1; y++) {
+            vertical[x*h + y] = (sy[y+1] - sy[y]) * DEFAULT;
+        }
+    }
+    for(int x=0; x<w-1; x++) {
+        for(int y=0; y<h; y++) {
+            horizontal[x*h+y] = (sx[x+1] - sx[x]) * DEFAULT;
+        }
+    }
+    
+    for(int i=0; i<w; i++) {
+        for(int j=0; j<h; j++) {
+            if(vertical[i*h + j] < 0 )
+                cout << vertical[i*h + j];
+            if(horizontal[i*h + j] < 0 )
+                cout << horizontal[i*h + j];
+        }
+    }
+    
+    for(int i=0; i<n; i++) {
+        int x1_id = searchID(sx, x1[i], 0, w-1);
+        int y1_id = searchID(sy, y1[i], 0, h-1);
+        int x2_id = searchID(sx, x2[i], 0, w-1);
+        int y2_id = searchID(sy, y2[i], 0, h-1);
+        for (int x = x1_id + 1; x < x2_id; ++x) {
+            for (int y = y1_id; y < y2_id; ++y) {
+                vertical[x*h + y] = (sy[y + 1] - sy[y]) * cost[i];
+            }
+        }
+        for (int x = x1_id; x < x2_id; ++x) {
+            for (int y = y1_id + 1; y < y2_id; ++y) {
+                horizontal[x*h + y] = (sx[x + 1] - sx[x]) * cost[i];
+//                if(horizontal[x*h + y] < 0 ) {
+//                    cout << sx[x + 1] << ", " << sx[x] << ", " << cost[i] << " = " << horizontal[x*h + y] << endl;
+//                }
+            }
+        }
+    }
+    
+    ll* heap_v = new ll[b_size];
+    int* heap_l = new int[b_size];
+    int* heap_a = new int[b_size];
+    ll* dist= new ll[b_size];
+    for(int i=0; i<b_size; i++) {
+        heap_a[i] = -1;
+        dist[i] = MAX_COST;
+    }
+    
+    int src = searchID(sx, ax, 0, w-1) * h + searchID(sy, ay, 0, h-1);
+    int dst = searchID(sx, bx, 0, w-1) * h + searchID(sy, by, 0, h-1);
+    heap_v[0] = 0;
+    heap_l[0] = src;
+    heap_a[src] = 0;
+    int heap_size = 1;
+    dist[src] = 0;
+    
+    while(true) {
+        int here = heap_l[0];
+        ll cost = heap_v[0];
+        if(here == dst) break;
+        remove(heap_v, heap_l, heap_a, heap_size);
+        
+        int h_x = here / h;
+        int h_y = here % h;
+        //cout << here << " = " << h_x << ", " <<  h_y << ", " << cost << endl;
+        if(h_x < w - 1) {
+            ll n_cost = horizontal[here] + cost;
+            if(dist[here+h] > n_cost) {
+                insert(heap_v, heap_l, heap_a, n_cost, here + h, heap_size);
+                dist[here+h] = n_cost;
+            }
+        }
+        if(h_x > 0) {
+            ll n_cost = horizontal[here - h] + cost;
+            if(dist[here-h] > n_cost){
+                insert(heap_v, heap_l, heap_a, n_cost, here - h, heap_size);
+                dist[here-h] = n_cost;
+            }
+        }
+        if(h_y < h - 1) {
+            ll n_cost = vertical[here] + cost;
+            if(dist[here+1] > n_cost) {
+                insert(heap_v, heap_l, heap_a, n_cost, here + 1, heap_size);
+                dist[here+1] = n_cost;
+            }
+        }
+        if(h_y > 0) {
+            ll n_cost = vertical[here - 1] + cost;
+            if(dist[here-1] > n_cost) {
+                insert(heap_v, heap_l, heap_a, n_cost, here - 1, heap_size);
+                dist[here-1] = n_cost;
+            }
+        }
+        
+//        for(int i=0; i<heap_size; i++) {
+//            cout << i << " : " << heap_l[i] << ", " << heap_v[i] << ", " << heap_a[heap_l[i]] << endl;
+//        }
+    }
+    cout << dist[dst] << endl;
+    
+    return 0;
 }
