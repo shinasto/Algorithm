@@ -5,7 +5,7 @@ typedef long long ll;
 const ll DEFAULT = 10;
 const ll MAX_COST = 2000000000LL;
 
-void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
+inline void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
     ll temp = heap_v[pos1];
     heap_v[pos1] = heap_v[pos2];
     heap_v[pos2] = temp;
@@ -16,14 +16,13 @@ void hswap(ll* heap_v, int* heap_l, int* heap_a, int pos1, int pos2) {
     heap_a[heap_l[pos2]] = pos2;
 }
 
-void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& size) {
+inline void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& size) {
     if(heap_a[loc] < 0) {
         heap_v[size] = v;
         heap_l[size] = loc;
         heap_a[loc] = size;
         size += 1;
     } else {
-        //cout << heap_v[heap_a[loc]] <<  " "<< dist[loc] << " "<< v << endl;
         heap_v[heap_a[loc]] = v;
     }
     
@@ -36,7 +35,7 @@ void insert(ll* heap_v, int* heap_l, int* heap_a, ll v, int loc, int& size) {
     }
 }
 
-void remove(ll* heap_v, int* heap_l, int* heap_a, int& size) {
+inline void remove(ll* heap_v, int* heap_l, int* heap_a, int& size) {
     if(size == 0 ) return;
     size -= 1;
     int current = 0;
@@ -210,7 +209,6 @@ int main() {
         
         int h_x = here / h;
         int h_y = here % h;
-        //cout << here << " = " << h_x << ", " <<  h_y << ", " << cost << endl;
         if(h_x < w - 1) {
             ll n_cost = horizontal[here] + cost;
             if(dist[here+h] > n_cost) {
@@ -239,10 +237,6 @@ int main() {
                 dist[here-1] = n_cost;
             }
         }
-        
-//        for(int i=0; i<heap_size; i++) {
-//            cout << i << " : " << heap_l[i] << ", " << heap_v[i] << ", " << heap_a[heap_l[i]] << endl;
-//        }
     }
     cout << dist[dst] << endl;
     
