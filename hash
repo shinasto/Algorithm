@@ -1,3 +1,4 @@
+// http://d2.naver.com/helloworld/831311
 int hashCode(char val[], int size) {
 	int h = 0;
 	for (int i = 0; i < size; i++) {
