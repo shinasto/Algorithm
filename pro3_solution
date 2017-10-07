@@ -1,0 +1,52 @@
+#include <iostream>
+using namespace std;
+
+#define MAX(X,Y) (((X)<(Y))?(Y):(X))
+int N, K, M_NUM;
+int ninput[100001];
+int nNext[100001];
+int nPrev[100001];
+int team[100001];
+int kth[100001];
+int tail[100001];
+
+int main(int argc, const char * argv[]) {
+    int t;
+    cin >> t;
+    for(int tc=1; tc<=t; tc++) {
+        cin >> N >> K;
+        for(int i=0; i<=N; i++) nPrev[i] = nNext[i] = team[i] = kth[i] = tail[i] = 0;
+        int num;
+        int temp[100001] = {0, };
+        for(int i=1; i<=N; i++) {
+            cin >> num;
+            ninput[i] = num;
+            nNext[i] = temp[num];
+            nPrev[temp[num]] = i;
+            temp[num] = i;
+        }
+        
+        M_NUM = 1;
+        team[ninput[N]] = 1;
+        tail[ninput[N]] = N;
+        for(int i=N-1; i>0; i--) {
+            num = ninput[i];
+            if(tail[num] == 0) tail[num] = i;
+            if(num != ninput[i+1]) {
+                int newK = kth[num];
+                if(nPrev[i] > 0)
+                    newK += nPrev[i] - i - 1;
+                while(newK > K) {
+                    newK -= tail[num] - nNext[tail[num]] - 1;
+                    team[num]--;
+                    tail[num] = nNext[tail[num]];
+                }
+                kth[num] = newK;
+            }
+            team[num]++;
+            M_NUM = MAX(team[num], M_NUM);
+        }
+        cout << "#" << tc << " " << M_NUM << endl;
+    }
+    return 0;
+}
