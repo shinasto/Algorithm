@@ -1,0 +1,74 @@
+#include <iostream>
+#include <string.h>
+using namespace std;
+
+typedef unsigned long long ll;
+const ll MOD = 1000000003;
+ll cache[2500][250] = {0, };
+ll data[2500][250] = {0, };
+ll pow[11] = {0, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+char input[2501];
+
+inline ll atoi(char a) { return (ll)(a - 48); }
+ll makeNumber(int index, int prevLen, int prevNumIdx) {
+	// base case
+	if(index == -1) return 1;
+	int digit = 0, count = 0, temp = 0;
+	int curNumIdx = prevNumIdx + 1;
+	ll num;
+	ll ret = 0;
+	data[curNumIdx][0] = 0;
+	for(int i=index; i>=0; i--) {
+		num = atoi(input[i]);
+		if(count / 10 > digit) data[curNumIdx][digit++] = 0;
+		if(num != 0) {
+			count += temp + 1;
+			data[curNumIdx][digit] +=  num * pow[count%10];
+			cout << curNumIdx << ": " << data[curNumIdx][digit] << endl;
+			temp = 0;
+		} else {
+			temp++;
+		}
+
+		if(count > 0 && (prevLen > count || data[prevNumIdx][digit] > data[curNumIdx][digit])) {
+			ll a = makeNumber(i-1, count, curNumIdx);
+			if(a > 0) {
+				ret = ((data[curNumIdx][0] % MOD) * a) % MOD;
+			}
+		} else if(count != 0)
+			break;
+	}
+	// init
+	for(int i=0; i<=digit; i++) data[curNumIdx][i] = 0;
+	return ret;
+}
+
+int main() {
+	cin >> input;
+	int len = strlen(input);
+	ll num, result = 0;
+	int digit = 0, count = 0, temp = 0;
+	// make last number
+	for(int i=len-1; i >= 0; i--) {
+		num = atoi(input[i]);
+		if(count / 10 > digit) data[0][digit++] = 0;
+		if(num != 0) {
+			count += temp + 1;
+			data[0][digit] +=  num * pow[count % 10];
+			cout << "0: " << data[0][digit] << endl;
+			temp = 0;
+		} else {
+			temp++;
+		}
+		if(count > 0) {
+			result = makeNumber(i-1, count, 0);
+			if(result > 0) break;
+		}
+	}
+	if(result == 0)
+		cout << input << endl;
+	else
+		cout << ((data[0][0] % MOD) * result) % MOD;
+
+	return 0;
+}
